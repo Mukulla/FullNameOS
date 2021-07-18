@@ -13,19 +13,15 @@
 #define tcout std::cout
 #endif
 
-std::vector<std::wstring> Info;
-
 void FillVector();
 void Greetings();
 void HandleKeys();
 void GetNameWindows();
-std::wstring GetRegSubKey(LPCWSTR subKeysPath, std::wstring surrentsubKeysPath);
-std::wstring TCHARToString(TCHAR someChar[]);
-LPWSTR ConvertToLPWSTR(const std::wstring& someString);
+std::wstring GetRegSubKey(LPCWSTR subKeysPath, LPCWSTR surrentsubKeysPath);
 std::wstring GetStringWithBitWindows();
 BOOL Is64BitWindows();
-void ResetTCHAR(TCHAR* SomeText);
 
+std::vector<std::wstring> Info;
 bool WorkDone = false;
 
 int main( int argc, _TCHAR* argv[] )
@@ -73,7 +69,7 @@ void HandleKeys()
 		}
 		catch (const std::exception&)
 		{
-			std::cout << "Failed to read full name current system" << std::endl;
+			Info.push_back(L"Failed to read fullname current system");
 		}
 		
 		break;
@@ -88,13 +84,13 @@ void GetNameWindows()
 	LPCWSTR spacer = L" ";
 	LPCWSTR subKeysPath = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 	
-	std::vector<std::wstring> subKeys;
-	subKeys.push_back(L"ProductName");
-	subKeys.push_back(L"CurrentBuild");
-	//subKeys.push_back(L"CSDVersion");
-	subKeys.push_back(L"BuildLabEx");
-	subKeys.push_back(L"ReleaseId");
-	subKeys.push_back(L"SystemRoot");
+	LPCWSTR subKeys[5];
+	subKeys[0] = L"ProductName";
+	subKeys[1] = L"CurrentBuild";
+	subKeys[2] = L"CSDVersion";
+	//subKeys[2] = L"BuildBranch";
+	subKeys[3] = L"ReleaseId";
+	subKeys[4] = L"SystemRoot";
 
 	std::wstring fullNameWindows;
 
@@ -113,37 +109,21 @@ void GetNameWindows()
 	WorkDone = true;
 }
 
-std::wstring GetRegSubKey(LPCWSTR subKeysPath, std::wstring surrentsubKeysPath)
+std::wstring GetRegSubKey(LPCWSTR subKeysPath, LPCWSTR surrentsubKeysPath)
 {
 	DWORD bufferSize = BUFFER_SIZE;
 	TCHAR tempoBuffer[BUFFER_SIZE];
 
-	RegGetValue(HKEY_LOCAL_MACHINE, subKeysPath, ConvertToLPWSTR(surrentsubKeysPath), RRF_RT_ANY, NULL, tempoBuffer, &bufferSize);
-
-	return TCHARToString(tempoBuffer);
-}
-
-std::wstring TCHARToString(TCHAR someChar[])
-{
-	std::wstring tempo(someChar);
+	RegGetValue(HKEY_LOCAL_MACHINE, subKeysPath, surrentsubKeysPath, RRF_RT_ANY, NULL, tempoBuffer, &bufferSize);
+	
+	std::wstring tempo(tempoBuffer);
+	//tempo[BUFFER_SIZE - 1] = '\0';
 	return tempo;
-}
-
-LPWSTR ConvertToLPWSTR(const std::wstring& someString)
-{
-	LPWSTR ws = new wchar_t[someString.size() + 1];
-	std::copy(someString.begin(), someString.end(), ws);
-	ws[someString.size()] = 0;
-	return ws;
 }
 
 std::wstring GetStringWithBitWindows()
 {
-	if (Is64BitWindows())
-	{
-		return L"64 bit";
-	}
-	return L"32 bit";
+	return Is64BitWindows() ? L"64 bit" : L"32 bit";
 }
 
 BOOL Is64BitWindows()
@@ -158,12 +138,4 @@ BOOL Is64BitWindows()
 #else
 	return FALSE; // Win64 does not support Win16
 #endif
-}
-
-void ResetTCHAR(TCHAR* SomeText)
-{
-	for (size_t i = 0; i < BUFFER_SIZE; ++i)
-	{
-		SomeText[i] = '\0';
-	}
 }
