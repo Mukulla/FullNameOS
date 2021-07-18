@@ -70,8 +70,7 @@ void HandleKeys()
 		catch (const std::exception&)
 		{
 			Info.push_back(L"Failed to read fullname current system");
-		}
-		
+		}		
 		break;
 	case 27:
 		exit(1);
@@ -81,29 +80,25 @@ void HandleKeys()
 
 void GetNameWindows()
 {
-	LPCWSTR spacer = L" ";
 	LPCWSTR subKeysPath = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 	
 	LPCWSTR subKeys[5];
 	subKeys[0] = L"ProductName";
 	subKeys[1] = L"CurrentBuild";
 	subKeys[2] = L"CSDVersion";
-	//subKeys[2] = L"BuildBranch";
-	subKeys[3] = L"ReleaseId";
-	subKeys[4] = L"SystemRoot";
+	subKeys[3] = L"SystemRoot";
 
 	std::wstring fullNameWindows;
 
 	
 	Info.push_back(L" ");
 
-	fullNameWindows = L"Operating System: " + GetRegSubKey(subKeysPath, subKeys[0]);
-	fullNameWindows += spacer + GetStringWithBitWindows();
+	fullNameWindows = L"Operating System:" + GetRegSubKey(subKeysPath, subKeys[0]);
+	fullNameWindows += GetStringWithBitWindows();
 	fullNameWindows += L" (Build " + GetRegSubKey(subKeysPath, subKeys[1]) + L"),";
-	fullNameWindows += spacer + GetRegSubKey(subKeysPath, subKeys[2]);
-	fullNameWindows += spacer + GetRegSubKey(subKeysPath, subKeys[3]);
+	fullNameWindows += GetRegSubKey(subKeysPath, subKeys[2]);
 
-	Info.push_back(L"SystemRoot " + GetRegSubKey(subKeysPath, subKeys[4]));
+	Info.push_back(L"SystemRoot " + GetRegSubKey(subKeysPath, subKeys[3]));
 	Info.push_back(fullNameWindows);
 
 	WorkDone = true;
@@ -114,16 +109,17 @@ std::wstring GetRegSubKey(LPCWSTR subKeysPath, LPCWSTR surrentsubKeysPath)
 	DWORD bufferSize = BUFFER_SIZE;
 	TCHAR tempoBuffer[BUFFER_SIZE];
 
-	RegGetValue(HKEY_LOCAL_MACHINE, subKeysPath, surrentsubKeysPath, RRF_RT_ANY, NULL, tempoBuffer, &bufferSize);
-	
-	std::wstring tempo(tempoBuffer);
-	//tempo[BUFFER_SIZE - 1] = '\0';
-	return tempo;
+	if (RegGetValue(HKEY_LOCAL_MACHINE, subKeysPath, surrentsubKeysPath, RRF_RT_ANY, NULL, tempoBuffer, &bufferSize) == 0)
+	{
+		std::wstring tempo(tempoBuffer);
+		return L" " + tempo;
+	}
+	return L"";
 }
 
 std::wstring GetStringWithBitWindows()
 {
-	return Is64BitWindows() ? L"64 bit" : L"32 bit";
+	return Is64BitWindows() ? L" 64 bit" : L" 32 bit";
 }
 
 BOOL Is64BitWindows()
