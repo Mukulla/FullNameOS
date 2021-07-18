@@ -18,6 +18,7 @@ void Greetings();
 void HandleKeys();
 void GetNameWindows();
 std::string TCHARToString(TCHAR someChar[]);
+BOOL Is64BitWindows();
 
 bool WorkDone = false;
 
@@ -89,13 +90,31 @@ void GetNameWindows()
 
 	
 	Info.push_back(" ");
+
     RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"ProductName", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
 	fullNameWindows = "Operating System: " + TCHARToString(tempoBuffer);
     //Info.push_back(TCHARToString(tempoBuffer));
+	
+	if (Is64BitWindows())
+	{
+		fullNameWindows += " 64 bit operating system ";
+	}
+	else
+	{
+		fullNameWindows += " 32 bit operating system ";
+	}
 
 	RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"CurrentBuild", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
 	fullNameWindows += " ( Build " + TCHARToString(tempoBuffer) + " ), ";
-	//Info.push_back(TCHARToString(tempoBuffer));
+
+
+	LSTATUS servicePackStatus = RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"CSDVersion", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);	
+	int value = servicePackStatus;	
+	Info.push_back(std::to_string(value));
+	if (servicePackStatus == ERROR_SUCCESS)
+	{
+		fullNameWindows += " " + TCHARToString(tempoBuffer) + " ";
+	}
 
 	RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"ReleaseId", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
 	fullNameWindows += TCHARToString(tempoBuffer);
@@ -114,4 +133,18 @@ std::string TCHARToString(TCHAR someChar[])
 	std::string tempo(arr_w.begin(), arr_w.end());
 
 	return tempo;
+}
+
+BOOL Is64BitWindows()
+{
+#if defined(_WIN64)
+	return TRUE;  // 64-bit programs run only on Win64
+#elif defined(_WIN32)
+	// 32-bit programs run on both 32-bit and 64-bit Windows
+	// so must sniff
+	BOOL f64 = FALSE;
+	return IsWow64Process(GetCurrentProcess(), &f64) && f64;
+#else
+	return FALSE; // Win64 does not support Win16
+#endif
 }
