@@ -5,10 +5,6 @@
 #include <string>
 #include <vector>
 
-#define TOTAL_BYTES_READ 1024
-#define OFFSET_BYTES 1024
-#define BUFFER 8192
-
 #if defined(UNICODE) || defined(_UNICODE)
 #define tcout std::wcout
 #else
@@ -21,6 +17,9 @@ void FillVector();
 void Greetings();
 void HandleKeys();
 void GetNameWindows();
+std::string TCHARToString(TCHAR someChar[]);
+
+bool WorkDone = false;
 
 int main( int argc, _TCHAR* argv[] )
 {
@@ -59,7 +58,20 @@ void HandleKeys()
 	switch (_getch())
 	{
 	case 13:
-		GetNameWindows();
+		if (WorkDone)
+		{
+			return;
+		}			
+
+		try
+		{
+			GetNameWindows();
+		}
+		catch (const std::exception&)
+		{
+			std::cout << "Failed to read full name current system" << std::endl;
+		}
+		
 		break;
 	case 27:
 		exit(1);
@@ -68,20 +80,38 @@ void HandleKeys()
 }
 
 void GetNameWindows()
-{
-	TCHAR  infoBuf[MAX_PATH];
-	GetWindowsDirectoryW(infoBuf, MAX_PATH);
-	//GetSystemDirectory(infoBuf, MAX_PATH);
+{	
+    DWORD BufferSize = MAX_PATH;
+	TCHAR  tempoBuffer[MAX_PATH];
 
-	std::wstring arr_w(infoBuf);
+	LPCWSTR subKeyReg = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+	std::string fullNameWindows;
+
+	
+	Info.push_back(" ");
+    RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"ProductName", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
+	fullNameWindows = "Operating System: " + TCHARToString(tempoBuffer);
+    //Info.push_back(TCHARToString(tempoBuffer));
+
+	RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"CurrentBuild", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
+	fullNameWindows += " ( Build " + TCHARToString(tempoBuffer) + " ), ";
+	//Info.push_back(TCHARToString(tempoBuffer));
+
+	RegGetValue(HKEY_LOCAL_MACHINE, subKeyReg, L"ReleaseId", RRF_RT_ANY, NULL, tempoBuffer, &BufferSize);
+	fullNameWindows += TCHARToString(tempoBuffer);
+
+	Info.push_back(fullNameWindows);	
+	
+	GetWindowsDirectory(tempoBuffer, MAX_PATH);
+	Info.push_back("SystemRoot " + TCHARToString(tempoBuffer));
+
+	WorkDone = true;
+}
+
+std::string TCHARToString(TCHAR someChar[])
+{
+	std::wstring arr_w(someChar);
 	std::string tempo(arr_w.begin(), arr_w.end());
 
-	Info.push_back(tempo);
-	//tcout << infoBuf << std::endl;
-
-    char value[255];
-    DWORD BufferSize = BUFFER;
-    RegGetValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"SystemRoot", RRF_RT_ANY, NULL, (PVOID)&value, &BufferSize);
-    //std::cout << value << std::endl;
-    Info.push_back(value);
+	return tempo;
 }
