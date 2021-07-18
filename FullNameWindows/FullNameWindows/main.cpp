@@ -30,12 +30,9 @@ bool WorkDone = false;
 
 int main( int argc, _TCHAR* argv[] )
 {
-	int code;
-	bool doWork = true;
-
 	FillVector();
 
-	while (doWork)
+	while (1)
 	{
 		system("cls");
 
