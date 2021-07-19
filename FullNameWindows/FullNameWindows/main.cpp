@@ -86,7 +86,8 @@ void GetNameWindows()
 	subKeys[0] = L"ProductName";
 	subKeys[1] = L"CurrentBuild";
 	subKeys[2] = L"CSDVersion";
-	subKeys[3] = L"SystemRoot";
+	subKeys[3] = L"ReleaseId";
+	subKeys[4] = L"SystemRoot";
 
 	std::wstring fullNameWindows;
 
@@ -97,8 +98,9 @@ void GetNameWindows()
 	fullNameWindows += GetStringWithBitWindows();
 	fullNameWindows += L" (Build " + GetRegSubKey(subKeysPath, subKeys[1]) + L"),";
 	fullNameWindows += GetRegSubKey(subKeysPath, subKeys[2]);
+	fullNameWindows += GetRegSubKey(subKeysPath, subKeys[3]);
 
-	Info.push_back(L"SystemRoot " + GetRegSubKey(subKeysPath, subKeys[3]));
+	Info.push_back(L"SystemRoot " + GetRegSubKey(subKeysPath, subKeys[4]));
 	Info.push_back(fullNameWindows);
 
 	WorkDone = true;
